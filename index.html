@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>名人对话实验室</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="layout">
+      <aside class="panel left">
+        <h1>名人对话实验室</h1>
+        <p class="muted">v0.1.0 本地原型：选择名人并提问，按人物资料生成回答。</p>
+        <div id="persona-list" class="persona-list"></div>
+      </aside>
+
+      <section class="panel center">
+        <header class="chat-header">
+          <h2 id="current-name">请选择名人</h2>
+          <p id="current-summary" class="muted">右侧显示人物资料与回答依据。</p>
+        </header>
+
+        <div id="chat-log" class="chat-log"></div>
+
+        <form id="chat-form" class="chat-form">
+          <input id="chat-input" type="text" placeholder="输入你的问题，例如：你怎么看坚持与天赋？" />
+          <button type="submit">发送</button>
+        </form>
+      </section>
+
+      <aside class="panel right">
+        <h3>人物资料</h3>
+        <ul id="persona-facts" class="facts"></ul>
+        <h3>回答依据</h3>
+        <ul id="citations" class="facts"></ul>
+      </aside>
+    </main>
+
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>
