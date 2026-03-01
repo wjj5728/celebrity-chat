@@ -59,6 +59,13 @@ body {
 .msg.user { align-self: flex-end; background: #183354; }
 .msg.assistant { align-self: flex-start; background: #152236; }
 .chat-form { display: flex; gap: 8px; margin-top: 8px; }
+.model-select {
+  border: 1px solid var(--line);
+  background: #0f1728;
+  color: var(--text);
+  border-radius: 10px;
+  padding: 10px;
+}
 .chat-form input {
   flex: 1;
   border: 1px solid var(--line);

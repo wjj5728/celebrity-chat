@@ -1,9 +1,11 @@
 import { personas } from "./personas.js";
+import { askPersona } from "./api.js";
 
 const personaListEl = document.getElementById("persona-list");
 const chatLogEl = document.getElementById("chat-log");
 const formEl = document.getElementById("chat-form");
 const inputEl = document.getElementById("chat-input");
+const modelSelectEl = document.getElementById("model-select");
 const currentNameEl = document.getElementById("current-name");
 const currentSummaryEl = document.getElementById("current-summary");
 const factsEl = document.getElementById("persona-facts");
@@ -37,16 +39,6 @@ function renderFacts(persona) {
   });
 }
 
-function buildReply(persona, question) {
-  const lower = question.toLowerCase();
-  const matched = persona.facts.filter((x) => lower.split(/[\s,，。？！?]+/).some((k) => k && x.toLowerCase().includes(k)));
-  const refs = matched.length ? matched.slice(0, 2) : persona.facts.slice(0, 2);
-
-  const answer = `${persona.voice}。你问到“${question}”，如果从我的经历出发，我会这样看：${persona.templateA} ${persona.templateB}`;
-
-  return { answer, refs };
-}
-
 function selectPersona(personaId) {
   current = personas.find((p) => p.id === personaId) || null;
   document.querySelectorAll(".persona-btn").forEach((btn) => {
@@ -72,16 +64,28 @@ personas.forEach((p) => {
   personaListEl.appendChild(btn);
 });
 
-formEl.addEventListener("submit", (e) => {
+formEl.addEventListener("submit", async (e) => {
   e.preventDefault();
   const q = inputEl.value.trim();
   if (!q || !current) return;
 
   appendMessage("user", q);
-  const { answer, refs } = buildReply(current, q);
-  appendMessage("assistant", answer);
-  setCitations(refs);
   inputEl.value = "";
+
+  const pending = document.createElement("div");
+  pending.className = "msg assistant";
+  pending.textContent = "思考中...";
+  chatLogEl.appendChild(pending);
+
+  const result = await askPersona({
+    persona: current,
+    question: q,
+    model: modelSelectEl.value,
+  });
+
+  pending.textContent = `${result.answer}\n\n（模型：${result.meta.model}）`;
+  setCitations(result.refs);
+  chatLogEl.scrollTop = chatLogEl.scrollHeight;
 });
 
 selectPersona(personas[0].id);
