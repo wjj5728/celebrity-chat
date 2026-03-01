@@ -1,12 +1,14 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 
 import { personas } from "@/lib/personas";
 
 type Msg = { role: "user" | "assistant"; text: string };
 
 type RefItem = { text: string; source: string };
+
+const CHAT_STATE_KEY = "celebrity-chat-state-v07";
 
 export default function HomePage() {
   const [personaId, setPersonaId] = useState(personas[0].id);
@@ -20,6 +22,38 @@ export default function HomePage() {
   const [metaInfo, setMetaInfo] = useState<{ level?: string; latencyMs?: number }>({});
 
   const current = useMemo(() => personas.find((p) => p.id === personaId) || personas[0], [personaId]);
+
+  useEffect(() => {
+    const raw = window.localStorage.getItem(CHAT_STATE_KEY);
+    if (!raw) return;
+
+    try {
+      const saved = JSON.parse(raw) as {
+        personaId?: string;
+        model?: string;
+        messages?: Msg[];
+        refs?: RefItem[];
+        metaInfo?: { level?: string; latencyMs?: number };
+      };
+
+      if (saved.personaId && personas.some((p) => p.id === saved.personaId)) {
+        setPersonaId(saved.personaId);
+      }
+      if (saved.model) setModel(saved.model);
+      if (saved.messages && saved.messages.length) setMessages(saved.messages);
+      if (saved.refs) setRefs(saved.refs);
+      if (saved.metaInfo) setMetaInfo(saved.metaInfo);
+    } catch {
+      window.localStorage.removeItem(CHAT_STATE_KEY);
+    }
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem(
+      CHAT_STATE_KEY,
+      JSON.stringify({ personaId, model, messages, refs, metaInfo }),
+    );
+  }, [personaId, model, messages, refs, metaInfo]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -48,7 +82,7 @@ export default function HomePage() {
       <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-4 lg:grid-cols-[280px_1fr_320px]">
         <aside className="rounded-xl border border-slate-700 bg-slate-900 p-4">
           <h1 className="text-xl font-semibold">名人对话实验室</h1>
-          <p className="mt-2 text-sm text-slate-400">v0.6.0 评测可视化（安全等级 + 响应延迟）</p>
+          <p className="mt-2 text-sm text-slate-400">v0.7.0 会话持久化（本地历史 + 一键清空）</p>
           <div className="mt-4 space-y-2">
             {personas.map((p) => (
               <button
@@ -58,6 +92,7 @@ export default function HomePage() {
                   setPersonaId(p.id);
                   setMessages([{ role: "assistant", text: `你好，我将以${p.name}的风格与你交流。` }]);
                   setRefs([]);
+                  setMetaInfo({});
                 }}
               >
                 <div className="font-medium">{p.name}</div>
@@ -68,9 +103,23 @@ export default function HomePage() {
         </aside>
 
         <section className="rounded-xl border border-slate-700 bg-slate-900 p-4">
-          <header>
-            <h2 className="text-lg font-semibold">{current.name}（角色视角）</h2>
-            <p className="text-sm text-slate-400">{current.summary}</p>
+          <header className="flex items-start justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold">{current.name}（角色视角）</h2>
+              <p className="text-sm text-slate-400">{current.summary}</p>
+            </div>
+            <button
+              type="button"
+              className="rounded-lg border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:bg-slate-800"
+              onClick={() => {
+                const resetMessages: Msg[] = [{ role: "assistant", text: `你好，我将以${current.name}的风格与你交流。` }];
+                setMessages(resetMessages);
+                setRefs([]);
+                setMetaInfo({});
+              }}
+            >
+              清空会话
+            </button>
           </header>
 
           <div className="mt-4 h-[56vh] overflow-auto space-y-3 pr-1">
