@@ -5,6 +5,7 @@ import { buildGroundedReply, retrieveRelevantChunks } from "@/lib/rag";
 import { moderateQuestion, withSafetySuffix } from "@/lib/safety";
 
 export async function POST(request: Request) {
+  const startedAt = Date.now();
   const body = await request.json().catch(() => null);
   const question = String(body?.question || "").trim();
   const personaId = String(body?.personaId || "").trim();
@@ -27,7 +28,7 @@ export async function POST(request: Request) {
       reason: moderation.reason,
       answer: `这个问题我不能直接回答：${moderation.reason}。你可以换个安全、学习型问法。`,
       refs: [],
-      meta: { model, ts: Date.now() },
+      meta: { model, ts: Date.now(), latencyMs: Date.now() - startedAt },
     });
   }
 
@@ -39,6 +40,6 @@ export async function POST(request: Request) {
     level: moderation.level,
     answer,
     refs,
-    meta: { model, ts: Date.now() },
+    meta: { model, ts: Date.now(), latencyMs: Date.now() - startedAt },
   });
 }

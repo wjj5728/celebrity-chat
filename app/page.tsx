@@ -17,6 +17,7 @@ export default function HomePage() {
   ]);
   const [refs, setRefs] = useState<RefItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [metaInfo, setMetaInfo] = useState<{ level?: string; latencyMs?: number }>({});
 
   const current = useMemo(() => personas.find((p) => p.id === personaId) || personas[0], [personaId]);
 
@@ -38,6 +39,7 @@ export default function HomePage() {
 
     setMessages((prev) => [...prev, { role: "assistant", text: `${data.answer}\n\n（模型：${data.meta?.model || model}）` }]);
     setRefs(data.refs || []);
+    setMetaInfo({ level: data.level, latencyMs: data.meta?.latencyMs });
     setLoading(false);
   }
 
@@ -46,7 +48,7 @@ export default function HomePage() {
       <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-4 lg:grid-cols-[280px_1fr_320px]">
         <aside className="rounded-xl border border-slate-700 bg-slate-900 p-4">
           <h1 className="text-xl font-semibold">名人对话实验室</h1>
-          <p className="mt-2 text-sm text-slate-400">v0.5.0 Next.js 架构（API Route + 前后端同仓）</p>
+          <p className="mt-2 text-sm text-slate-400">v0.6.0 评测可视化（安全等级 + 响应延迟）</p>
           <div className="mt-4 space-y-2">
             {personas.map((p) => (
               <button
@@ -116,6 +118,12 @@ export default function HomePage() {
             {refs.map((r, idx) => (
               <li key={idx}>{r.text}（来源：{r.source}）</li>
             ))}
+          </ul>
+
+          <h3 className="mt-4 text-base font-semibold">运行指标</h3>
+          <ul className="mt-2 list-disc space-y-2 pl-5 text-sm text-slate-300">
+            <li>安全等级：{metaInfo.level || "-"}</li>
+            <li>响应延迟：{typeof metaInfo.latencyMs === "number" ? `${metaInfo.latencyMs} ms` : "-"}</li>
           </ul>
         </aside>
       </div>
