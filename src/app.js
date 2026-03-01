@@ -1,6 +1,7 @@
 import { personas } from "./personas.js";
 import { askPersona } from "./api.js";
 import { retrieveRelevantChunks, buildGroundedReply } from "./rag.js";
+import { moderateQuestion, withSafetySuffix } from "./safety.js";
 
 const personaListEl = document.getElementById("persona-list");
 const chatLogEl = document.getElementById("chat-log");
@@ -76,6 +77,13 @@ formEl.addEventListener("submit", async (e) => {
   appendMessage("user", q);
   inputEl.value = "";
 
+  const moderation = moderateQuestion(q);
+  if (moderation.level === "block") {
+    appendMessage("assistant", `这个问题我不能直接回答：${moderation.reason}。你可以换个安全、学习型问法。`);
+    setCitations([]);
+    return;
+  }
+
   const pending = document.createElement("div");
   pending.className = "msg assistant";
   pending.textContent = "思考中...";
@@ -90,7 +98,7 @@ formEl.addEventListener("submit", async (e) => {
     model: modelSelectEl.value,
   });
 
-  pending.textContent = `${groundedDraft}\n\n（模型：${result.meta.model}）`;
+  pending.textContent = `${groundedDraft}${withSafetySuffix(moderation.level)}\n\n（模型：${result.meta.model}）`;
   setCitations(refs);
   chatLogEl.scrollTop = chatLogEl.scrollHeight;
 });
