@@ -25,7 +25,15 @@ export default function HomePage() {
   ]);
   const [refs, setRefs] = useState<RefItem[]>([]);
   const [loading, setLoading] = useState(false);
-  const [metaInfo, setMetaInfo] = useState<{ level?: string; latencyMs?: number; provider?: string; score?: number; scoreLevel?: string }>({});
+  const [metaInfo, setMetaInfo] = useState<{
+    level?: string;
+    latencyMs?: number;
+    provider?: string;
+    score?: number;
+    scoreLevel?: string;
+    personaCode?: string;
+    promptVersion?: string;
+  }>({});
   const [serviceStatus, setServiceStatus] = useState<{ provider?: string; ok?: boolean; modelReady?: boolean }>({});
   const [checkingModel, setCheckingModel] = useState(false);
 
@@ -57,6 +65,8 @@ export default function HomePage() {
           provider?: string;
           score?: number;
           scoreLevel?: string;
+          personaCode?: string;
+          promptVersion?: string;
         };
       };
 
@@ -142,6 +152,8 @@ export default function HomePage() {
       provider: data.meta?.provider,
       score: quality.total,
       scoreLevel: quality.level,
+      personaCode: data.meta?.personaCode,
+      promptVersion: data.meta?.promptVersion,
     });
     setLoading(false);
   }
@@ -151,7 +163,7 @@ export default function HomePage() {
       <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-4 lg:grid-cols-[280px_1fr_320px]">
         <aside className="rounded-xl border border-slate-700 bg-slate-900 p-4">
           <h1 className="text-xl font-semibold">名人对话实验室</h1>
-          <p className="mt-2 text-sm text-slate-400">v1.9.0 Prompt 协议化 + 角色识别码</p>
+          <p className="mt-2 text-sm text-slate-400">v2.0.0 协议元信息透出（personaCode/promptVersion）</p>
           <p className="mt-1 text-xs text-slate-500">
             服务状态：{serviceStatus.ok ? "正常" : "异常"} / 模型源：{serviceStatus.provider || "检测中"} / 模型连接：
             {serviceStatus.modelReady ? "已配置" : "未配置"}
@@ -313,6 +325,8 @@ export default function HomePage() {
             <li>模型来源：{metaInfo.provider || "-"}</li>
             <li>响应延迟：{typeof metaInfo.latencyMs === "number" ? `${metaInfo.latencyMs} ms` : "-"}</li>
             <li>回答评分：{typeof metaInfo.score === "number" ? `${metaInfo.score} / 100（${metaInfo.scoreLevel}）` : "-"}</li>
+            <li>角色识别码：{metaInfo.personaCode || "-"}</li>
+            <li>协议版本：{metaInfo.promptVersion || "-"}</li>
           </ul>
 
           <h3 className="mt-4 text-base font-semibold">会话统计</h3>

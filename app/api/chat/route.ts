@@ -71,6 +71,8 @@ export async function POST(request: Request) {
     meta: {
       model,
       provider: generated.provider,
+      personaCode: persona.personaCode,
+      promptVersion: "v1",
       ts: Date.now(),
       latencyMs: Date.now() - startedAt,
     },
