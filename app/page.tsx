@@ -24,6 +24,7 @@ export default function HomePage() {
   const [refs, setRefs] = useState<RefItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [metaInfo, setMetaInfo] = useState<{ level?: string; latencyMs?: number; provider?: string; score?: number; scoreLevel?: string }>({});
+  const [serviceStatus, setServiceStatus] = useState<{ provider?: string; ok?: boolean }>({});
 
   const current = useMemo(() => personas.find((p) => p.id === personaId) || personas[0], [personaId]);
   const tags = useMemo(() => ["全部", ...Array.from(new Set(personas.map((p) => p.tag.split("/")[0].trim())))], []);
@@ -74,6 +75,17 @@ export default function HomePage() {
     );
   }, [personaId, model, messages, refs, metaInfo]);
 
+  useEffect(() => {
+    fetch("/api/health")
+      .then((res) => res.json())
+      .then((data) => {
+        setServiceStatus({ ok: Boolean(data?.ok), provider: data?.modelProvider || "unknown" });
+      })
+      .catch(() => {
+        setServiceStatus({ ok: false, provider: "offline" });
+      });
+  }, []);
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const q = question.trim();
@@ -123,7 +135,10 @@ export default function HomePage() {
       <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-4 lg:grid-cols-[280px_1fr_320px]">
         <aside className="rounded-xl border border-slate-700 bg-slate-900 p-4">
           <h1 className="text-xl font-semibold">名人对话实验室</h1>
-          <p className="mt-2 text-sm text-slate-400">v1.2.0 名人搜索与分类筛选</p>
+          <p className="mt-2 text-sm text-slate-400">v1.3.0 健康检查接口与模型状态展示</p>
+          <p className="mt-1 text-xs text-slate-500">
+            服务状态：{serviceStatus.ok ? "正常" : "异常"} / 模型源：{serviceStatus.provider || "检测中"}
+          </p>
           <div className="mt-4 space-y-2">
             <input
               value={search}
