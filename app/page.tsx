@@ -25,7 +25,8 @@ export default function HomePage() {
   const [refs, setRefs] = useState<RefItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [metaInfo, setMetaInfo] = useState<{ level?: string; latencyMs?: number; provider?: string; score?: number; scoreLevel?: string }>({});
-  const [serviceStatus, setServiceStatus] = useState<{ provider?: string; ok?: boolean }>({});
+  const [serviceStatus, setServiceStatus] = useState<{ provider?: string; ok?: boolean; modelReady?: boolean }>({});
+  const [checkingModel, setCheckingModel] = useState(false);
 
   const current = useMemo(() => personas.find((p) => p.id === personaId) || personas[0], [personaId]);
   const tags = useMemo(() => ["全部", ...Array.from(new Set(personas.map((p) => p.tag.split("/")[0].trim())))], []);
@@ -77,15 +78,25 @@ export default function HomePage() {
     );
   }, [personaId, model, messages, refs, metaInfo]);
 
-  useEffect(() => {
-    fetch("/api/health")
-      .then((res) => res.json())
-      .then((data) => {
-        setServiceStatus({ ok: Boolean(data?.ok), provider: data?.modelProvider || "unknown" });
-      })
-      .catch(() => {
-        setServiceStatus({ ok: false, provider: "offline" });
+  async function checkModelConnection() {
+    setCheckingModel(true);
+    try {
+      const res = await fetch("/api/health");
+      const data = await res.json();
+      setServiceStatus({
+        ok: Boolean(data?.ok),
+        provider: data?.modelProvider || "unknown",
+        modelReady: Boolean(data?.modelReady),
       });
+    } catch {
+      setServiceStatus({ ok: false, provider: "offline", modelReady: false });
+    } finally {
+      setCheckingModel(false);
+    }
+  }
+
+  useEffect(() => {
+    checkModelConnection();
   }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -139,10 +150,19 @@ export default function HomePage() {
       <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-4 lg:grid-cols-[280px_1fr_320px]">
         <aside className="rounded-xl border border-slate-700 bg-slate-900 p-4">
           <h1 className="text-xl font-semibold">名人对话实验室</h1>
-          <p className="mt-2 text-sm text-slate-400">v1.5.0 会话统计面板（轮次/消息数/字数）</p>
+          <p className="mt-2 text-sm text-slate-400">v1.6.0 模型连接检测按钮</p>
           <p className="mt-1 text-xs text-slate-500">
-            服务状态：{serviceStatus.ok ? "正常" : "异常"} / 模型源：{serviceStatus.provider || "检测中"}
+            服务状态：{serviceStatus.ok ? "正常" : "异常"} / 模型源：{serviceStatus.provider || "检测中"} / 模型连接：
+            {serviceStatus.modelReady ? "已配置" : "未配置"}
           </p>
+          <button
+            type="button"
+            className="mt-2 w-full rounded-lg border border-cyan-700 bg-cyan-900/30 px-3 py-2 text-xs text-cyan-200 hover:bg-cyan-900/50"
+            onClick={checkModelConnection}
+            disabled={checkingModel}
+          >
+            {checkingModel ? "检测中..." : "检测模型连接"}
+          </button>
           <div className="mt-4 space-y-2">
             <input
               value={search}

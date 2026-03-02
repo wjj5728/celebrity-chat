@@ -8,6 +8,7 @@ export async function GET() {
     service: "celebrity-chat",
     modelProvider: hasRayincodeKey ? "rayincode" : "mock",
     hasRayincodeKey,
+    modelReady: hasRayincodeKey,
     timestamp: Date.now(),
   });
 }
