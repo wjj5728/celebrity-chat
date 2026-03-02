@@ -71,6 +71,18 @@ export default function HomePage() {
     });
     const data = await response.json();
 
+    if (!response.ok) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          text: data?.error ? `${data.error}${data.retryAfterMs ? `（约${Math.ceil(data.retryAfterMs / 1000)}秒后重试）` : ""}` : "请求失败，请稍后重试。",
+        },
+      ]);
+      setLoading(false);
+      return;
+    }
+
     setMessages((prev) => [...prev, { role: "assistant", text: `${data.answer}\n\n（模型：${data.meta?.model || model}）` }]);
     setRefs(data.refs || []);
     setMetaInfo({
@@ -86,7 +98,7 @@ export default function HomePage() {
       <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-4 lg:grid-cols-[280px_1fr_320px]">
         <aside className="rounded-xl border border-slate-700 bg-slate-900 p-4">
           <h1 className="text-xl font-semibold">名人对话实验室</h1>
-          <p className="mt-2 text-sm text-slate-400">v0.8.0 后端模型接入（RayinCode + Mock 兜底）</p>
+          <p className="mt-2 text-sm text-slate-400">v0.9.0 API 限流保护（429 + 重试提示）</p>
           <div className="mt-4 space-y-2">
             {personas.map((p) => (
               <button

@@ -4,6 +4,7 @@ import { personas } from "@/lib/personas";
 import { buildGroundedReply, retrieveRelevantChunks } from "@/lib/rag";
 import { moderateQuestion, withSafetySuffix } from "@/lib/safety";
 import { generateAnswer } from "@/lib/model";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   const startedAt = Date.now();
@@ -14,6 +15,20 @@ export async function POST(request: Request) {
 
   if (!question || !personaId) {
     return NextResponse.json({ error: "缺少问题或名人ID" }, { status: 400 });
+  }
+
+  const ip = request.headers.get("x-forwarded-for") || "local";
+  const limitMax = Number(process.env.RATE_LIMIT_MAX || 12);
+  const limitWindowMs = Number(process.env.RATE_LIMIT_WINDOW_MS || 60000);
+  const rate = checkRateLimit(ip, limitMax, limitWindowMs);
+  if (!rate.allowed) {
+    return NextResponse.json(
+      {
+        error: "请求过于频繁，请稍后再试",
+        retryAfterMs: rate.retryAfterMs,
+      },
+      { status: 429 },
+    );
   }
 
   const persona = personas.find((p) => p.id === personaId);
