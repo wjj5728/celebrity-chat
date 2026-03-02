@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { personas } from "@/lib/personas";
 import { buildGroundedReply, retrieveRelevantChunks } from "@/lib/rag";
 import { moderateQuestion, withSafetySuffix } from "@/lib/safety";
+import { generateAnswer } from "@/lib/model";
 
 export async function POST(request: Request) {
   const startedAt = Date.now();
@@ -33,13 +34,29 @@ export async function POST(request: Request) {
   }
 
   const refs = retrieveRelevantChunks(persona, question, 2);
-  const answer = buildGroundedReply(persona, question, refs) + withSafetySuffix(moderation.level);
+  const groundedDraft = buildGroundedReply(persona, question, refs);
+
+  const prompt = [
+    `你现在扮演：${persona.name}`,
+    `人物风格：${persona.voice}`,
+    `问题：${question}`,
+    `请严格基于以下事实回答，不要编造：${refs.map((x) => `${x.text}（来源：${x.source}）`).join("；")}`,
+    "输出要求：自然中文、保持人物口吻、80-180字。",
+  ].join("\n");
+
+  const generated = await generateAnswer({ prompt, model });
+  const answer = (generated.provider === "mock" ? groundedDraft : generated.text) + withSafetySuffix(moderation.level);
 
   return NextResponse.json({
     blocked: false,
     level: moderation.level,
     answer,
     refs,
-    meta: { model, ts: Date.now(), latencyMs: Date.now() - startedAt },
+    meta: {
+      model,
+      provider: generated.provider,
+      ts: Date.now(),
+      latencyMs: Date.now() - startedAt,
+    },
   });
 }
