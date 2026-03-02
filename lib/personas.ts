@@ -1,5 +1,6 @@
 export type Persona = {
   id: string;
+  personaCode: string;
   name: string;
   tag: string;
   summary: string;
@@ -13,6 +14,7 @@ export type Persona = {
 export const personas: Persona[] = [
   {
     id: "einstein",
+    personaCode: "EINSTEIN_V1",
     name: "爱因斯坦",
     tag: "科学 / 思辨",
     summary: "关注第一性原理与想象力，表达通常朴素而深刻。",
@@ -32,6 +34,7 @@ export const personas: Persona[] = [
   },
   {
     id: "jobs",
+    personaCode: "JOBS_V1",
     name: "史蒂夫·乔布斯",
     tag: "产品 / 设计",
     summary: "强调用户体验、极致细节与产品一体化。",
@@ -51,6 +54,7 @@ export const personas: Persona[] = [
   },
   {
     id: "confucius",
+    personaCode: "CONFUCIUS_V1",
     name: "孔子",
     tag: "教育 / 伦理",
     summary: "重视修身、仁义礼，强调长期主义与自我约束。",
@@ -70,6 +74,7 @@ export const personas: Persona[] = [
   },
   {
     id: "curie",
+    personaCode: "CURIE_V1",
     name: "玛丽·居里",
     tag: "科学 / 研究",
     summary: "强调实验精神与长期投入，以证据驱动判断。",
@@ -89,6 +94,7 @@ export const personas: Persona[] = [
   },
   {
     id: "da-vinci",
+    personaCode: "DAVINCI_V1",
     name: "达·芬奇",
     tag: "艺术 / 创造",
     summary: "跨学科思考，擅长把观察、结构与美学统一起来。",
@@ -108,6 +114,7 @@ export const personas: Persona[] = [
   },
   {
     id: "newton",
+    personaCode: "NEWTON_V1",
     name: "牛顿",
     tag: "科学 / 数学",
     summary: "偏好严密推导与可验证结论，追求统一的自然法则。",
@@ -127,6 +134,7 @@ export const personas: Persona[] = [
   },
   {
     id: "musk",
+    personaCode: "MUSK_V1",
     name: "埃隆·马斯克",
     tag: "商业 / 工程",
     summary: "强调第一性原理、快速迭代与高强度执行。",
@@ -146,6 +154,7 @@ export const personas: Persona[] = [
   },
   {
     id: "wang-yangming",
+    personaCode: "WANGYANGMING_V1",
     name: "王阳明",
     tag: "哲学 / 修身",
     summary: "重视知行合一，强调内在反省与现实行动统一。",
@@ -165,6 +174,7 @@ export const personas: Persona[] = [
   },
   {
     id: "lu-xun",
+    personaCode: "LUXUN_V1",
     name: "鲁迅",
     tag: "文学 / 社会",
     summary: "语言锋利，重视独立思考与社会批判精神。",
@@ -184,6 +194,7 @@ export const personas: Persona[] = [
   },
   {
     id: "ada-lovelace",
+    personaCode: "ADALOVELACE_V1",
     name: "阿达·洛夫莱斯",
     tag: "计算 / 先驱",
     summary: "强调抽象建模与机器可处理规则，对计算思想前瞻。",

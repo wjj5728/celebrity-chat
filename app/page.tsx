@@ -151,7 +151,7 @@ export default function HomePage() {
       <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-4 lg:grid-cols-[280px_1fr_320px]">
         <aside className="rounded-xl border border-slate-700 bg-slate-900 p-4">
           <h1 className="text-xl font-semibold">名人对话实验室</h1>
-          <p className="mt-2 text-sm text-slate-400">v1.7.0 快捷提问按钮（预设问题）</p>
+          <p className="mt-2 text-sm text-slate-400">v1.9.0 Prompt 协议化 + 角色识别码</p>
           <p className="mt-1 text-xs text-slate-500">
             服务状态：{serviceStatus.ok ? "正常" : "异常"} / 模型源：{serviceStatus.provider || "检测中"} / 模型连接：
             {serviceStatus.modelReady ? "已配置" : "未配置"}

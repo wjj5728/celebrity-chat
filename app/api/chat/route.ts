@@ -4,6 +4,7 @@ import { personas } from "@/lib/personas";
 import { buildGroundedReply, retrieveRelevantChunks } from "@/lib/rag";
 import { moderateQuestion, withSafetySuffix } from "@/lib/safety";
 import { generateAnswer } from "@/lib/model";
+import { buildPersonaProtocolPrompt } from "@/lib/prompt-protocol";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
@@ -52,20 +53,12 @@ export async function POST(request: Request) {
   const refs = retrieveRelevantChunks(persona, question, 2);
   const groundedDraft = buildGroundedReply(persona, question, refs);
 
-  const historyText = history
-    .map((item: { role?: string; text?: string }) => `${item.role === "assistant" ? "名人" : "用户"}：${String(item.text || "")}`)
-    .join("\n");
-
-  const prompt = [
-    `你现在扮演：${persona.name}`,
-    `人物风格：${persona.voice}`,
-    historyText ? `最近对话：\n${historyText}` : "",
-    `当前问题：${question}`,
-    `请严格基于以下事实回答，不要编造：${refs.map((x) => `${x.text}（来源：${x.source}）`).join("；")}`,
-    "输出要求：自然中文、保持人物口吻、80-180字。",
-  ]
-    .filter(Boolean)
-    .join("\n");
+  const prompt = buildPersonaProtocolPrompt({
+    persona,
+    question,
+    refs,
+    history,
+  });
 
   const generated = await generateAnswer({ prompt, model });
   const answer = (generated.provider === "mock" ? groundedDraft : generated.text) + withSafetySuffix(moderation.level);
