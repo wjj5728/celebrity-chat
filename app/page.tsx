@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
+import { buildMarkdownTranscript } from "@/lib/export";
 import { personas } from "@/lib/personas";
 
 type Msg = { role: "user" | "assistant"; text: string };
@@ -98,7 +99,7 @@ export default function HomePage() {
       <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-4 lg:grid-cols-[280px_1fr_320px]">
         <aside className="rounded-xl border border-slate-700 bg-slate-900 p-4">
           <h1 className="text-xl font-semibold">名人对话实验室</h1>
-          <p className="mt-2 text-sm text-slate-400">v0.9.0 API 限流保护（429 + 重试提示）</p>
+          <p className="mt-2 text-sm text-slate-400">v1.0.0 对话导出（Markdown）+ 里程碑版</p>
           <div className="mt-4 space-y-2">
             {personas.map((p) => (
               <button
@@ -124,18 +125,40 @@ export default function HomePage() {
               <h2 className="text-lg font-semibold">{current.name}（角色视角）</h2>
               <p className="text-sm text-slate-400">{current.summary}</p>
             </div>
-            <button
-              type="button"
-              className="rounded-lg border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:bg-slate-800"
-              onClick={() => {
-                const resetMessages: Msg[] = [{ role: "assistant", text: `你好，我将以${current.name}的风格与你交流。` }];
-                setMessages(resetMessages);
-                setRefs([]);
-                setMetaInfo({});
-              }}
-            >
-              清空会话
-            </button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                className="rounded-lg border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:bg-slate-800"
+                onClick={() => {
+                  const markdown = buildMarkdownTranscript({
+                    personaName: current.name,
+                    model,
+                    messages,
+                  });
+                  const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });
+                  const url = URL.createObjectURL(blob);
+                  const link = document.createElement("a");
+                  link.href = url;
+                  link.download = `celebrity-chat-${current.id}-${Date.now()}.md`;
+                  link.click();
+                  URL.revokeObjectURL(url);
+                }}
+              >
+                导出记录
+              </button>
+              <button
+                type="button"
+                className="rounded-lg border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:bg-slate-800"
+                onClick={() => {
+                  const resetMessages: Msg[] = [{ role: "assistant", text: `你好，我将以${current.name}的风格与你交流。` }];
+                  setMessages(resetMessages);
+                  setRefs([]);
+                  setMetaInfo({});
+                }}
+              >
+                清空会话
+              </button>
+            </div>
           </header>
 
           <div className="mt-4 h-[56vh] overflow-auto space-y-3 pr-1">
