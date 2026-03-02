@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 
 import { buildMarkdownTranscript } from "@/lib/export";
 import { personas } from "@/lib/personas";
+import { scoreAnswer } from "@/lib/scoring";
 
 type Msg = { role: "user" | "assistant"; text: string };
 
@@ -20,7 +21,7 @@ export default function HomePage() {
   ]);
   const [refs, setRefs] = useState<RefItem[]>([]);
   const [loading, setLoading] = useState(false);
-  const [metaInfo, setMetaInfo] = useState<{ level?: string; latencyMs?: number; provider?: string }>({});
+  const [metaInfo, setMetaInfo] = useState<{ level?: string; latencyMs?: number; provider?: string; score?: number; scoreLevel?: string }>({});
 
   const current = useMemo(() => personas.find((p) => p.id === personaId) || personas[0], [personaId]);
 
@@ -34,7 +35,13 @@ export default function HomePage() {
         model?: string;
         messages?: Msg[];
         refs?: RefItem[];
-        metaInfo?: { level?: string; latencyMs?: number; provider?: string };
+        metaInfo?: {
+          level?: string;
+          latencyMs?: number;
+          provider?: string;
+          score?: number;
+          scoreLevel?: string;
+        };
       };
 
       if (saved.personaId && personas.some((p) => p.id === saved.personaId)) {
@@ -84,12 +91,18 @@ export default function HomePage() {
       return;
     }
 
-    setMessages((prev) => [...prev, { role: "assistant", text: `${data.answer}\n\n（模型：${data.meta?.model || model}）` }]);
-    setRefs(data.refs || []);
+    const assistantText = `${data.answer}\n\n（模型：${data.meta?.model || model}）`;
+    const nextRefs = data.refs || [];
+    const quality = scoreAnswer(assistantText, nextRefs);
+
+    setMessages((prev) => [...prev, { role: "assistant", text: assistantText }]);
+    setRefs(nextRefs);
     setMetaInfo({
       level: data.level,
       latencyMs: data.meta?.latencyMs,
       provider: data.meta?.provider,
+      score: quality.total,
+      scoreLevel: quality.level,
     });
     setLoading(false);
   }
@@ -99,7 +112,7 @@ export default function HomePage() {
       <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-4 lg:grid-cols-[280px_1fr_320px]">
         <aside className="rounded-xl border border-slate-700 bg-slate-900 p-4">
           <h1 className="text-xl font-semibold">名人对话实验室</h1>
-          <p className="mt-2 text-sm text-slate-400">v1.0.0 对话导出（Markdown）+ 里程碑版</p>
+          <p className="mt-2 text-sm text-slate-400">v1.1.0 回答质量评分（可信度分级）</p>
           <div className="mt-4 space-y-2">
             {personas.map((p) => (
               <button
@@ -213,6 +226,7 @@ export default function HomePage() {
             <li>安全等级：{metaInfo.level || "-"}</li>
             <li>模型来源：{metaInfo.provider || "-"}</li>
             <li>响应延迟：{typeof metaInfo.latencyMs === "number" ? `${metaInfo.latencyMs} ms` : "-"}</li>
+            <li>回答评分：{typeof metaInfo.score === "number" ? `${metaInfo.score} / 100（${metaInfo.scoreLevel}）` : "-"}</li>
           </ul>
         </aside>
       </div>
