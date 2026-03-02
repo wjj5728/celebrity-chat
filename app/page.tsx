@@ -95,10 +95,12 @@ export default function HomePage() {
     setQuestion("");
     setLoading(true);
 
+    const history = messages.slice(-6).map((m) => ({ role: m.role, text: m.text }));
+
     const response = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question: q, personaId, model }),
+      body: JSON.stringify({ question: q, personaId, model, history }),
     });
     const data = await response.json();
 
@@ -135,7 +137,7 @@ export default function HomePage() {
       <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-4 lg:grid-cols-[280px_1fr_320px]">
         <aside className="rounded-xl border border-slate-700 bg-slate-900 p-4">
           <h1 className="text-xl font-semibold">名人对话实验室</h1>
-          <p className="mt-2 text-sm text-slate-400">v1.3.0 健康检查接口与模型状态展示</p>
+          <p className="mt-2 text-sm text-slate-400">v1.4.0 多轮上下文记忆（最近6条）</p>
           <p className="mt-1 text-xs text-slate-500">
             服务状态：{serviceStatus.ok ? "正常" : "异常"} / 模型源：{serviceStatus.provider || "检测中"}
           </p>

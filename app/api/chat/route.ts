@@ -12,6 +12,7 @@ export async function POST(request: Request) {
   const question = String(body?.question || "").trim();
   const personaId = String(body?.personaId || "").trim();
   const model = String(body?.model || "gpt-5.3-codex").trim();
+  const history = Array.isArray(body?.history) ? body.history.slice(-6) : [];
 
   if (!question || !personaId) {
     return NextResponse.json({ error: "缺少问题或名人ID" }, { status: 400 });
@@ -51,13 +52,20 @@ export async function POST(request: Request) {
   const refs = retrieveRelevantChunks(persona, question, 2);
   const groundedDraft = buildGroundedReply(persona, question, refs);
 
+  const historyText = history
+    .map((item: { role?: string; text?: string }) => `${item.role === "assistant" ? "名人" : "用户"}：${String(item.text || "")}`)
+    .join("\n");
+
   const prompt = [
     `你现在扮演：${persona.name}`,
     `人物风格：${persona.voice}`,
-    `问题：${question}`,
+    historyText ? `最近对话：\n${historyText}` : "",
+    `当前问题：${question}`,
     `请严格基于以下事实回答，不要编造：${refs.map((x) => `${x.text}（来源：${x.source}）`).join("；")}`,
     "输出要求：自然中文、保持人物口吻、80-180字。",
-  ].join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
 
   const generated = await generateAnswer({ prompt, model });
   const answer = (generated.provider === "mock" ? groundedDraft : generated.text) + withSafetySuffix(moderation.level);
