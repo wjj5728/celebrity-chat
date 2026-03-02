@@ -16,6 +16,8 @@ export default function HomePage() {
   const [personaId, setPersonaId] = useState(personas[0].id);
   const [model, setModel] = useState("gpt-5.3-codex");
   const [question, setQuestion] = useState("");
+  const [search, setSearch] = useState("");
+  const [tagFilter, setTagFilter] = useState("全部");
   const [messages, setMessages] = useState<Msg[]>([
     { role: "assistant", text: `你好，我将以${personas[0].name}的风格与你交流。` },
   ]);
@@ -24,6 +26,15 @@ export default function HomePage() {
   const [metaInfo, setMetaInfo] = useState<{ level?: string; latencyMs?: number; provider?: string; score?: number; scoreLevel?: string }>({});
 
   const current = useMemo(() => personas.find((p) => p.id === personaId) || personas[0], [personaId]);
+  const tags = useMemo(() => ["全部", ...Array.from(new Set(personas.map((p) => p.tag.split("/")[0].trim())))], []);
+  const filteredPersonas = useMemo(() => {
+    return personas.filter((p) => {
+      const hitTag = tagFilter === "全部" || p.tag.includes(tagFilter);
+      const key = search.trim().toLowerCase();
+      const hitSearch = !key || p.name.toLowerCase().includes(key) || p.tag.toLowerCase().includes(key);
+      return hitTag && hitSearch;
+    });
+  }, [search, tagFilter]);
 
   useEffect(() => {
     const raw = window.localStorage.getItem(CHAT_STATE_KEY);
@@ -112,9 +123,28 @@ export default function HomePage() {
       <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-4 lg:grid-cols-[280px_1fr_320px]">
         <aside className="rounded-xl border border-slate-700 bg-slate-900 p-4">
           <h1 className="text-xl font-semibold">名人对话实验室</h1>
-          <p className="mt-2 text-sm text-slate-400">v1.1.0 回答质量评分（可信度分级）</p>
+          <p className="mt-2 text-sm text-slate-400">v1.2.0 名人搜索与分类筛选</p>
           <div className="mt-4 space-y-2">
-            {personas.map((p) => (
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="搜索名人或标签"
+              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+            />
+            <select
+              value={tagFilter}
+              onChange={(e) => setTagFilter(e.target.value)}
+              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+            >
+              {tags.map((tag) => (
+                <option key={tag} value={tag}>
+                  {tag}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="mt-3 space-y-2">
+            {filteredPersonas.map((p) => (
               <button
                 key={p.id}
                 className={`w-full rounded-lg border px-3 py-2 text-left text-sm ${personaId === p.id ? "border-cyan-400 bg-slate-800" : "border-slate-700 bg-slate-950"}`}
@@ -129,6 +159,9 @@ export default function HomePage() {
                 <div className="text-xs text-slate-400">{p.tag}</div>
               </button>
             ))}
+            {filteredPersonas.length === 0 && (
+              <div className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-slate-400">未找到匹配名人</div>
+            )}
           </div>
         </aside>
 
