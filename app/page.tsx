@@ -5,6 +5,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { buildMarkdownTranscript } from "@/lib/export";
 import { personas } from "@/lib/personas";
 import { scoreAnswer } from "@/lib/scoring";
+import { calcSessionStats } from "@/lib/session-stats";
 
 type Msg = { role: "user" | "assistant"; text: string };
 
@@ -36,6 +37,7 @@ export default function HomePage() {
       return hitTag && hitSearch;
     });
   }, [search, tagFilter]);
+  const sessionStats = useMemo(() => calcSessionStats(messages), [messages]);
 
   useEffect(() => {
     const raw = window.localStorage.getItem(CHAT_STATE_KEY);
@@ -137,7 +139,7 @@ export default function HomePage() {
       <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-4 lg:grid-cols-[280px_1fr_320px]">
         <aside className="rounded-xl border border-slate-700 bg-slate-900 p-4">
           <h1 className="text-xl font-semibold">名人对话实验室</h1>
-          <p className="mt-2 text-sm text-slate-400">v1.4.0 多轮上下文记忆（最近6条）</p>
+          <p className="mt-2 text-sm text-slate-400">v1.5.0 会话统计面板（轮次/消息数/字数）</p>
           <p className="mt-1 text-xs text-slate-500">
             服务状态：{serviceStatus.ok ? "正常" : "异常"} / 模型源：{serviceStatus.provider || "检测中"}
           </p>
@@ -277,6 +279,14 @@ export default function HomePage() {
             <li>模型来源：{metaInfo.provider || "-"}</li>
             <li>响应延迟：{typeof metaInfo.latencyMs === "number" ? `${metaInfo.latencyMs} ms` : "-"}</li>
             <li>回答评分：{typeof metaInfo.score === "number" ? `${metaInfo.score} / 100（${metaInfo.scoreLevel}）` : "-"}</li>
+          </ul>
+
+          <h3 className="mt-4 text-base font-semibold">会话统计</h3>
+          <ul className="mt-2 list-disc space-y-2 pl-5 text-sm text-slate-300">
+            <li>有效轮次：{sessionStats.rounds}</li>
+            <li>用户消息：{sessionStats.userCount}</li>
+            <li>名人消息：{sessionStats.assistantCount}</li>
+            <li>总字数：{sessionStats.totalChars}</li>
           </ul>
         </aside>
       </div>
