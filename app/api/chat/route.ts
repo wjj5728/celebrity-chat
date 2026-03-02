@@ -63,11 +63,17 @@ export async function POST(request: Request) {
   const generated = await generateAnswer({ prompt, model });
   const answer = (generated.provider === "mock" ? groundedDraft : generated.text) + withSafetySuffix(moderation.level);
 
+  const refsWithId = refs.map((item, idx) => ({
+    id: idx + 1,
+    text: item.text,
+    source: item.source,
+  }));
+
   return NextResponse.json({
     blocked: false,
     level: moderation.level,
     answer,
-    refs,
+    refs: refsWithId,
     meta: {
       model,
       provider: generated.provider,

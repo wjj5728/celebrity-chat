@@ -10,7 +10,7 @@ import { calcSessionStats } from "@/lib/session-stats";
 
 type Msg = { role: "user" | "assistant"; text: string };
 
-type RefItem = { text: string; source: string };
+type RefItem = { id?: number; text: string; source: string };
 
 const CHAT_STATE_KEY = "celebrity-chat-state-v07";
 
@@ -163,7 +163,7 @@ export default function HomePage() {
       <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-4 lg:grid-cols-[280px_1fr_320px]">
         <aside className="rounded-xl border border-slate-700 bg-slate-900 p-4">
           <h1 className="text-xl font-semibold">名人对话实验室</h1>
-          <p className="mt-2 text-sm text-slate-400">v2.0.0 协议元信息透出（personaCode/promptVersion）</p>
+          <p className="mt-2 text-sm text-slate-400">v2.1.0 回答依据编号与可读性增强</p>
           <p className="mt-1 text-xs text-slate-500">
             服务状态：{serviceStatus.ok ? "正常" : "异常"} / 模型源：{serviceStatus.provider || "检测中"} / 模型连接：
             {serviceStatus.modelReady ? "已配置" : "未配置"}
@@ -315,7 +315,7 @@ export default function HomePage() {
           <ul className="mt-2 list-disc space-y-2 pl-5 text-sm text-slate-300">
             {refs.length === 0 && <li>发送问题后显示本轮依据</li>}
             {refs.map((r, idx) => (
-              <li key={idx}>{r.text}（来源：{r.source}）</li>
+              <li key={idx}>[{r.id ?? idx + 1}] {r.text}（来源：{r.source}）</li>
             ))}
           </ul>
 
